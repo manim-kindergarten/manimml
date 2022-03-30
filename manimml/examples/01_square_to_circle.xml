@@ -1,7 +1,7 @@
 <manim>
   <Circle id="circle"
-    set_fill="BLUE, opacity=0.8"
-    set_stroke="BLUE_E, width=4"
+    call.set_fill="BLUE, opacity=0.8"
+    call.set_stroke="BLUE_E, width=4"
   />
   <Square id="square"/>
 </manim>

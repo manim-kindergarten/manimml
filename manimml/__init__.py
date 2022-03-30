@@ -1,10 +1,8 @@
+from telnetlib import EL
 from manimlib import *
 # from manimml.mock import *
 from xml.etree.ElementTree import ElementTree, Element
 from functools import reduce
-
-
-preserved_attrs = {'id', 'class', 'args'}
 
 
 # Manim Markup Language
@@ -17,11 +15,14 @@ class ManimML:
 
         dom = ElementTree(file=file).getroot()
         for child in dom:
-            self.parse_node(child, scene)
+            self.parse_node(child)
 
-    # "5" -> [5], {}
-    # "1, 2, num=3" -> [1, 2], {'num': 3}
     def parse_kwargs(self, expr: str) -> tuple:
+        """
+        Examples:
+            "5" -> [5], {}
+            "1, 2, num=3" -> [1, 2], {'num': 3}
+        """
         if not isinstance(expr, str):
             return [], {}
         # return eval('[' + expr + ']', None, self.data), {}
@@ -81,17 +82,40 @@ class ManimML:
         # eval(expr, globals, locals)
         return eval('[' + arr + '], {' + dic + '}', None, self.data)
 
+    def parse_value(self, expr: str) -> object:
+        if not isinstance(expr, str):
+            return None
+        return eval(expr, None, self.data)
 
-    def parse_node(self, node: Element, parent: Mobject) -> Mobject:
+    def parse_args(self, node: Element) -> list:
+        if node.tag == 'Text' and 'args' not in node.attrib:
+            return [node.text] # some grammar sugar
+        else:
+            expr = node.attrib.get('args', '')
+            return self.parse_value('[' + expr + ']')
+
+    def parse_kw(self, node: Element) -> dict:
+        preserved_attrs = {'id', 'class', 'args'}
+        kw = {}
+        for attr in node.attrib:
+            if attr not in preserved_attrs and '.' not in attr:
+                expr = node.attrib.get(attr, None)
+                kw[attr] = self.parse_value(expr)
+        return kw
+
+    def parse_node(self, node: Element) -> Mobject:
+
         # create object
-        expr = node.attrib.get('init', None)
         constructor = eval(node.tag)
-        args, kw = self.parse_kwargs(expr)
+        if node.tag == 'VGroup':
+            args = [self.parse_node(child) for child in node]
+        else:
+            args = self.parse_args(node)
+        kw = self.parse_kw(node)
         obj = constructor(*args, **kw)
 
         # save object
         self.objs.append(obj)
-        # parent.add(obj)
 
         # save object id
         id = node.attrib.get('id', None)
@@ -106,33 +130,26 @@ class ManimML:
                 arr.append(obj)
                 self.classes[key] = arr
 
-        # parse other attrs
-        self.parse_attr(node, obj)
-
-        # parse children
-        for child in node:
-            self.parse_node(child, obj)
-
-    def parse_attr(self, node: Element, obj: Mobject):
+        # set attrs / call methods on obj
         for attr in node.attrib:
-            # call setter
-            if attr.startswith('set_'):
+            if attr.startswith('call.'):
+                method = getattr(obj, attr[5:])
                 expr = node.attrib.get(attr, None)
                 args, kw = self.parse_kwargs(expr)
-                getattr(obj, attr)(*args, **kw)
-            # call method
-            elif attr.startswith('call.'):
-                expr = node.attrib.get(attr, None)
-                attr = attr[5:]
-                args, kw = self.parse_kwargs(expr)
-                getattr(obj, attr)(*args, **kw)
-            # set attr
-            elif attr not in preserved_attrs:
-                path = attr.split('.')
+                method(*args, **kw)
+            elif attr.startswith('attr.'):
+                path = attr[5:].split('.')
                 context = reduce(getattr, path[:-1], obj)
                 expr = node.attrib.get(attr, True) # attr value defaults to True
                 args, kw = self.parse_kwargs(expr)
                 setattr(context, path[-1], args[0]) # take args[0] and ignore others
 
-    def __getitem__(self, key: str) -> Mobject:
-        return self.ids[key]
+        return obj
+        
+    def __getitem__(self, key: str) -> Mobject or tuple:
+        if isinstance(key, str):
+            return self.ids[key]
+        elif isinstance(key, tuple):
+            return (self.ids[id] for id in key)
+        else:
+            raise TypeError('key must be str or tuple')
