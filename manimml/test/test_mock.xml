@@ -1,0 +1,19 @@
+<manim>
+  <Object3D id="solarSystem">
+    <Mesh id="sun" class="sky"
+      init="geometry['sphere'], material['sun']"
+      call.scale="5, 5, 5"
+    />
+    <Object3D id="earthOrbit" position.x="10">
+      <Mesh id="earth" init="geometry['sphere'], material['earth']" class="sky" />
+      <Object3D id="moonOrbit" position.x="2">
+        <Mesh id="moon"
+          class="sky"
+          init="geometry['sphere'], material['moon']"
+          call.scale=".5, .5, .5"
+        />
+      </Object3D>
+    </Object3D>
+  </Object3D>
+  <PointLight init="0xffffff, 3" />
+</manim>
