@@ -2,6 +2,10 @@
 
 使用 xml 编写 manim.
 
+## quick start
+
+    $ pip install -e .
+
 整容前 (来自 [3b1b](https://github.com/3b1b/manim)):
 ```py
 from manimlib import *
