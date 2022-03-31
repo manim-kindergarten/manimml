@@ -1,0 +1,32 @@
+<manim>
+  <!-- number plane -->
+  <Text id="intro_words" call.to_edge="UP">
+    The original motivation for manim was to
+    better illustrate mathematical functions
+    as transformations.
+  </Text>
+  <NumberPlane id="grid" args="(-10, 10), (-5, 5)" />
+  <!-- linear transform -->
+  <VGroup id="linear_transform_words"
+    call.arrange="RIGHT"
+    call.to_edge="UP"
+    call.set_stroke="BLACK, 10, background=True"
+  >
+    <Text>This is what the matrix</Text>
+    <IntegerMatrix args="matrix" include_background_rectangle="True" />
+    <Text>looks like</Text>
+  </VGroup>
+  <!-- complex map -->
+  <ComplexPlane id="c_grid"
+    call.copy="moving_c_grid"
+    call.set_stroke="BLUE_E, 1"
+    call.add_coordinate_labels="font_size=24"
+  />
+  <TexText id="complex_map_words"
+    call.to_corner="UR"
+    call.set_stroke="BLACK, 5, background=True"
+  >
+    Or thinking of the plane as $\mathds{C}$,\\
+    this is the map $z \rightarrow z^2$
+  </TexText>
+</manim>

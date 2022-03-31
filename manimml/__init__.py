@@ -1,4 +1,3 @@
-from telnetlib import EL
 from manimlib import *
 # from manimml.mock import *
 from xml.etree.ElementTree import ElementTree, Element
@@ -7,11 +6,14 @@ from functools import reduce
 
 # Manim Markup Language
 class ManimML:
+    preserved_attrs = {'id', 'class', 'args', 'always_redraw'}
+    sugar_tags = {'Text', 'Tex', 'TexText'}
     def __init__(self, *args, scene: Scene, file: str, data: dict = {}):
         self.objs = []
         self.ids = dict()
         self.classes = dict()
-        self.data = data
+        self.data = {}
+        self.data.update(data) # copy data
 
         dom = ElementTree(file=file).getroot()
         for child in dom:
@@ -43,9 +45,12 @@ class ManimML:
             elif c == ',' and depth == 0:
                 comma_indices.append(i)
             elif c == '=' and depth == 0 and i > 0 and expr[i-1] not in '!><=+-*/%^':
-                index = comma_indices[-1]
+                index = comma_indices[-1] if len(comma_indices) else -1
                 break
-        arr, dic = expr[:index], expr[index+1:]
+        if index == -1:
+            arr, dic = '', expr
+        else:
+            arr, dic = expr[:index], expr[index+1:]
 
         # parse dict
         dic_buf = []
@@ -79,48 +84,53 @@ class ManimML:
             i += 1
 
         dic = ''.join(dic_buf)
-        # eval(expr, globals, locals)
-        return eval('[' + arr + '], {' + dic + '}', None, self.data)
+        return self.parse_value('[' + arr + '], {' + dic + '}')
 
     def parse_value(self, expr: str) -> object:
         if not isinstance(expr, str):
             return None
-        return eval(expr, None, self.data)
+        # eval(expr, globals, locals)
+        return eval(expr, None, self.data) # 后面的 xml 可以引用前面的 id
 
     def parse_args(self, node: Element) -> list:
-        if node.tag == 'Text' and 'args' not in node.attrib:
+        if 'args' not in node.attrib and node.tag in ManimML.sugar_tags:
             return [node.text] # some grammar sugar
         else:
             expr = node.attrib.get('args', '')
             return self.parse_value('[' + expr + ']')
 
     def parse_kw(self, node: Element) -> dict:
-        preserved_attrs = {'id', 'class', 'args'}
         kw = {}
         for attr in node.attrib:
-            if attr not in preserved_attrs and '.' not in attr:
+            if attr not in ManimML.preserved_attrs and '.' not in attr:
                 expr = node.attrib.get(attr, None)
                 kw[attr] = self.parse_value(expr)
         return kw
 
+    def save(self, obj: Mobject, id: str):
+        self.objs.append(obj)
+        if id:
+            self.ids[id] = obj
+            self.data[id] = obj
+
     def parse_node(self, node: Element) -> Mobject:
 
-        # create object
+        # find constructor, args, kw
         constructor = eval(node.tag)
         if node.tag == 'VGroup':
             args = [self.parse_node(child) for child in node]
         else:
             args = self.parse_args(node)
         kw = self.parse_kw(node)
-        obj = constructor(*args, **kw)
+
+        # create object
+        if node.attrib.get('always_redraw', False):
+            obj = always_redraw(constructor, *args, **kw)
+        else:
+            obj = constructor(*args, **kw)
 
         # save object
-        self.objs.append(obj)
-
-        # save object id
-        id = node.attrib.get('id', None)
-        if id:
-            self.ids[id] = obj
+        self.save(obj, node.attrib.get('id', None))
 
         # save object to classes
         className = node.attrib.get('class', None)
@@ -130,21 +140,44 @@ class ManimML:
                 arr.append(obj)
                 self.classes[key] = arr
 
+        self.parse_attr(node, obj)
+        return obj
+
+    def invoke(self, obj: Mobject, attr: str, expr: str):
+        # invoke method on obj
+        method = getattr(obj, attr)
+        if attr == 'copy':
+            self.save(method(), expr)
+        else:
+            args, kw = self.parse_kwargs(expr)
+            method(*args, **kw)
+
+    def parse_attr(self, node: Element, obj: Mobject):
         # set attrs / call methods on obj
         for attr in node.attrib:
             if attr.startswith('call.'):
-                method = getattr(obj, attr[5:])
                 expr = node.attrib.get(attr, None)
-                args, kw = self.parse_kwargs(expr)
-                method(*args, **kw)
+                self.invoke(obj, attr[5:], expr)
             elif attr.startswith('attr.'):
                 path = attr[5:].split('.')
                 context = reduce(getattr, path[:-1], obj)
                 expr = node.attrib.get(attr, True) # attr value defaults to True
                 args, kw = self.parse_kwargs(expr)
                 setattr(context, path[-1], args[0]) # take args[0] and ignore others
-
-        return obj
+            elif attr.startswith('calleach.'):
+                expr = node.attrib.get(attr, None)
+                args, kw = self.parse_kwargs(expr)
+                attr = attr[9:]
+                for child in obj: # VGroup is iterable
+                    method = getattr(child, attr)
+                    method(*args, **kw)
+            elif attr.startswith('attreach.'):
+                path = attr[9:].split('.')
+                expr = node.attrib.get(attr, True)
+                args, kw = self.parse_kwargs(expr)
+                for child in obj:
+                    context = reduce(getattr, path[:-1], child)
+                    setattr(context, path[-1], args[0])
         
     def __getitem__(self, key: str) -> Mobject or tuple:
         if isinstance(key, str):

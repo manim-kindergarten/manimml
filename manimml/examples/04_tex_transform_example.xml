@@ -1,0 +1,14 @@
+<manim>
+  <VGroup id="lines" call.arrange="DOWN, buff=LARGE_BUFF"
+    calleach.set_color_by_tex_to_color_map="{'A': BLUE, 'B': TEAL, 'C': GREEN}">
+  >
+    <Tex args="'A^2', '+', 'B^2', '=', 'C^2'" />
+    <Tex args="'A^2', '=', 'C^2', '-', 'B^2'" />
+    <Tex isolate="['A^2', *to_isolate]">
+      A^2 = (C + B)(C - B)
+    </Tex>
+    <Tex isolate="['A', *to_isolate]">
+      A = \sqrt{(C + B)(C - B)}
+    </Tex>
+  </VGroup>
+</manim>

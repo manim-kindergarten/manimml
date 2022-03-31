@@ -1,0 +1,13 @@
+<manim>
+  <Square id="square" call.set_fill="BLUE_E, 1" />
+  <Brace id="brace" args="square, UP" always_redraw="True" />
+  <VGroup id="label" call.arrange="RIGHT">
+    <!-- call.add_updater="lambda m: m.next_to(brace, UP)" -->
+    <Text id="text">Width = </Text>
+    <DecimalNumber id="number"
+      args="0"
+      show_ellipsis="True"
+      num_decimal_places="2"
+      include_sign="True" />
+  </VGroup>
+</manim>
