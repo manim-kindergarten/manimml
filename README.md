@@ -62,7 +62,7 @@ class TextExample(Scene):
       font_size="24"
       t2c="{'Text':BLUE, 'TexText':BLUE, 'LaTeX':ORANGE}"
     >
-      The most important difference between Text and TexText is that\n
+      The most important difference between Text and TexText is that
       you can change the font more easily, but can't use the LaTeX grammar
     </Text>
   </VGroup>
