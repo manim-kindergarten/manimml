@@ -94,7 +94,7 @@ from manimml import ManimML
 
 class TextExample(Scene):
     def construct(self):
-        app = ManimML(scene=self, file='03_text_example.xml', data={})
+        app = ManimML(file='03_text_example.xml', data={})
         text, difference, fonts, slant = app['text', 'difference', 'fonts', 'slant']
 
         self.play(Write(text))
