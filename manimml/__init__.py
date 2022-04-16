@@ -7,7 +7,7 @@ from functools import reduce
 # Manim Markup Language
 class ManimML:
     preserved_attrs = {'id', 'class', 'args', 'always_redraw'}
-    sugar_tags = {'Text', 'Tex', 'TexText'}
+    sugar_tags = {'Text', 'Tex', 'TexText', 'MTex', 'JTex'}
     def __init__(self, *args, file: str, data: dict = {}):
         self.objs = []
         self.ids = dict()

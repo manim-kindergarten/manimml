@@ -1,0 +1,5 @@
+<manim>
+  <JTex>
+    \int_0^\infty \mathrm{e}^{-x^2} \mathrm{d}\,x
+  </JTex>
+</manim>
