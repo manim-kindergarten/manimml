@@ -4,7 +4,7 @@ from manimml import ManimML
 
 class UpdatersExample(Scene):
     def construct(self):
-        app = ManimML(scene=self, file='05_updaters_example.xml')
+        app = ManimML(file='05_updaters_example.xml')
         square, brace, label, number = app['square', 'brace', 'label', 'number']
 
         # On all frames, the constructor Brace(square, UP) will

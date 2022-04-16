@@ -5,7 +5,7 @@ from manimml import ManimML
 class OpeningManimExample(Scene):
     def construct(self):
         matrix = [[1, 1], [0, 1]]
-        app = ManimML(scene=self, file='06_opening_manim_example.xml', data={
+        app = ManimML(file='06_opening_manim_example.xml', data={
             'matrix': matrix
         })
 

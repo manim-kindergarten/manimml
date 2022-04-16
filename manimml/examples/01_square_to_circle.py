@@ -4,7 +4,7 @@ from manimml import ManimML
 
 class SquareToCircle(Scene):
     def construct(self):
-        app = ManimML(scene=self, file='01_square_to_circle.xml', data={})
+        app = ManimML(file='01_square_to_circle.xml', data={})
         square = app['square']
         circle = app['circle']
         self.play(ShowCreation(square))

@@ -4,7 +4,7 @@ from manimml import ManimML
 
 class TexTransformExample(Scene):
     def construct(self):
-        app = ManimML(scene=self, file='04_tex_transform_example.xml', data={
+        app = ManimML(file='04_tex_transform_example.xml', data={
             'to_isolate': ['B', 'C', '=', '(', ')'],
         })
         lines = app['lines']

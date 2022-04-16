@@ -8,7 +8,7 @@ from functools import reduce
 class ManimML:
     preserved_attrs = {'id', 'class', 'args', 'always_redraw'}
     sugar_tags = {'Text', 'Tex', 'TexText'}
-    def __init__(self, *args, scene: Scene, file: str, data: dict = {}):
+    def __init__(self, *args, file: str, data: dict = {}):
         self.objs = []
         self.ids = dict()
         self.classes = dict()
@@ -116,7 +116,7 @@ class ManimML:
     def parse_node(self, node: Element) -> Mobject:
 
         # find constructor, args, kw
-        constructor = eval(node.tag)
+        constructor = eval(node.tag, None, self.data)
         if node.tag == 'VGroup':
             args = [self.parse_node(child) for child in node]
         else:
